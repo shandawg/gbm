@@ -1,17 +1,17 @@
-#ifndef TWEEDIE_H
-#define TWEEDIE_H
+#ifndef ASYMMETRIC_H
+#define ASYMMETRIC_H
 
 #include <Rmath.h>
 #include "distribution.h"
 
-class CTweedie : public CDistribution
+class CAsymmetric: public CDistribution
 {
 
 public:
 
-    CTweedie(double dPower) : dPower(dPower) {};
+    CAsymmetric();
 
-    virtual ~CTweedie();
+    virtual ~CAsymmetric();
 
 	GBMRESULT UpdateParams(double *adF,
 	                       double *adOffset,
@@ -75,8 +75,9 @@ private:
     vector<double> vecdDen;
 	vector<double> vecdMax;
     vector<double> vecdMin;
-    double dPower;
 };
 
-#endif // TWEEDIE_H
+#endif // ASYMMETRIC_H
+
+
 

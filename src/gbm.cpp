@@ -73,6 +73,10 @@ unsigned long gbm_setup
     {
         pDist = new CGamma();
     }
+    if(strcmp(pszFamily,"asymmetric") == 0)
+    {
+        pDist = new CAsymmetric();
+    }
     else if(strcmp(pszFamily,"tweedie") == 0)
     {
         pDist = new CTweedie(adMisc[0]);

@@ -112,7 +112,7 @@ gbm.fit <- function(x,y,
    }
    supported.distributions <-
    c("bernoulli","gaussian","poisson","adaboost","laplace","coxph","quantile",
-     "tdist", "multinomial", "huberized", "pairwise","gamma","tweedie")
+     "tdist", "multinomial", "huberized", "pairwise","gamma","tweedie", "asymmetric")
 
    distribution.call.name <- distribution$name
 
@@ -148,6 +148,10 @@ gbm.fit <- function(x,y,
          distribution$power = 1.5
       }
       Misc <- c(power=distribution$power)
+   }
+   if((distribution$name == "asymmetric") && any(y<0))
+   {
+       stop("Asymmetric requires the response to be positive")
    }
    if((distribution$name == "poisson") && any(y != trunc(y)))
    {

@@ -108,6 +108,10 @@ predict.gbm <- function(object,newdata,n.trees,
       {
          predF <- exp(predF)
       } else
+      if(object$distribution$name=="asymmetric")
+      {
+          predF <- exp(predF)
+      } else
       if(object$distribution$name=="tweedie")
       {
          predF <- exp(predF)

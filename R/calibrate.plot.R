@@ -64,6 +64,10 @@ calibrate.plot <- function(y,p,
       {
          se.lower[se.lower < 0] <- 0
       }
+      if(distribution=="asymmetric")
+      {
+          se.lower[se.lower < 0] <- 0
+      }
       if(distribution=="tweedie")
       {
          se.lower[se.lower < 0] <- 0

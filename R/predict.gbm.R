@@ -115,7 +115,7 @@ predict.gbm <- function(object,newdata,n.trees,
       } 
       else if(object$distribution$name=="asymmetric")
       {
-         predF <- exp(predF)
+         predF <- 0*predF
       }
       else if (object$distribution$name == "adaboost"){
          predF <- 1 / (1 + exp(-2*predF))

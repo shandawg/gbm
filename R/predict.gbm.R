@@ -96,29 +96,31 @@ predict.gbm <- function(object,newdata,n.trees,
 
    if(type=="response")
    {
+
       if(is.element(object$distribution$name, c("bernoulli", "pairwise")))
       {
          predF <- 1/(1+exp(-predF))
-      } else
-      if(object$distribution$name=="poisson")
+      } 
+      else if(object$distribution$name=="poisson")
       {
          predF <- exp(predF)
-      } else
-      if(object$distribution$name=="gamma")
+      }
+      else if(object$distribution$name=="gamma")
       {
          predF <- exp(predF)
-      } else
-      if(object$distribution$name=="tweedie")
+      } 
+      else if(object$distribution$name=="tweedie")
       {
          predF <- exp(predF)
-      } else
-      if(object$distribution$name=="asymmetric")
+      } 
+      else if(object$distribution$name=="asymmetric")
       {
-         predF <- exp(predF)
+         predF <- 1
       }
       else if (object$distribution$name == "adaboost"){
          predF <- 1 / (1 + exp(-2*predF))
       }
+
       if(object$distribution$name=="multinomial")
       {
          pexp <- exp(predF)
@@ -131,6 +133,7 @@ predict.gbm <- function(object,newdata,n.trees,
       {
          predF <- as.vector(predF)
       }
+
    }
 
    if(!is.null(attr(object$Terms,"offset")))

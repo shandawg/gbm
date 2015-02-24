@@ -111,12 +111,13 @@ predict.gbm <- function(object,newdata,n.trees,
       if(object$distribution$name=="tweedie")
       {
          predF <- exp(predF)
+      } else
+      if(object$distribution$name=="asymmetric")
+      {
+         predF <- exp(predF)
       }
       else if (object$distribution$name == "adaboost"){
          predF <- 1 / (1 + exp(-2*predF))
-      }
-      else if (object$distribution$name=="asymmetric"){
-          predF <- exp(predF)
       }
       if(object$distribution$name=="multinomial")
       {

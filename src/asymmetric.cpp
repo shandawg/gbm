@@ -40,7 +40,7 @@ GBMRESULT CAsymmetric::ComputeWorkingResponse
 	for(i=0; i<nTrain; i++)
 	{
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-		adZ[i] = adY[i]*exp(-dF)-1.0;
+		adZ[i] = -0.1*(exp(0.1 * (adY[i]*exp(-dF) - adF[i])) -1.0);
 	}
 
 Cleanup:
@@ -92,7 +92,7 @@ GBMRESULT CAsymmetric::InitF
 				adY[i] = exp(Min);
             }
 
-        	dSum += exp(0.1*adWeight[i]*log(adY[i]));
+        	dSum += exp(0.1*adWeight[i]*adY[i]);
             dTotalWeight += adWeight[i];
         }
 
@@ -244,10 +244,11 @@ double CAsymmetric::BagImprovement
 		if(!afInBag[i])
 		{
 			dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-			dReturnValue += adWeight[i]*(adY[i]*exp(-dF)*(1.0-exp(-dStepSize*adFadj[i])) - dStepSize*adFadj[i]);
+			dReturnValue += adWeight[i]* (
+				(exp( 0.1 * (log(adY[i]- dF))) - 0.1 * log(adY[i] - dF) - 1) - (exp( 0.1 * log(adY[i]-dF-dStepSize*adFadj[i])) - 0.1 * log(adY[i] - dF-dStepSize*adFadj[i]) - 1));
 			dW += adWeight[i];
 		}
 	}
 
-	return 2*dReturnValue/dW;
+	return dReturnValue/dW;
 }

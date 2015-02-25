@@ -1,5 +1,6 @@
-// Asymmetric, stealing Gamma distribution with natural log link function ( mean = exp(prediction) )
-// -19 <= prediction <= +19
+// Asymmetric loss function (LINEX): exp(a * (y - yhat)) - a * (y - yhat) - 1
+// Gradient: -a * sum(exp(a * (y - yhat)) - 1)
+// bestConstant: (1 / a) * log((1 / N) * sum(exp(a * y)))
 
 #include "asymmetric.h"
 #include <math.h>
@@ -40,7 +41,8 @@ GBMRESULT CAsymmetric::ComputeWorkingResponse
 	for(i=0; i<nTrain; i++)
 	{
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-		adZ[i] = -0.1*(exp(0.1 * (adY[i]*exp(-dF) - adF[i])) -1.0);
+		// negative gradient (as stated in distribution.h)
+        adZ[i] = 0.1 * (exp(0.1 * (adY[i] - dF)) - 1.0);
 	}
 
 Cleanup:
@@ -63,8 +65,6 @@ GBMRESULT CAsymmetric::InitF
 {
     double dSum=0.0;
     double dTotalWeight = 0.0;
-	double Min = -19.0;
-	double Max = +19.0;
     unsigned long i=0;
 
     if(adOffset==NULL)
@@ -72,8 +72,7 @@ GBMRESULT CAsymmetric::InitF
         for(i=0; i<cLength; i++)
         {
         	// including a: 0.1 here
-            //dSum += exp(0.1*adWeight[i]*log(adY[i]));
-
+            dSum += exp(0.1 * adWeight[i] * adY[i]);
             dTotalWeight += adWeight[i];
         }
     }
@@ -81,34 +80,14 @@ GBMRESULT CAsymmetric::InitF
     {
         for(i=0; i<cLength; i++)
         {
-        	// including a: 0.1 here
-            //dSum += exp(0.1*adWeight[i]*log(adY[i]));
-            if (log(adY[i]) > Max)
-            {
-            	adY[i] = exp(Max);
-            }
-            else if (adY[i] <= 0.0)
-			{
-				adY[i] = exp(Min);
-            }
-
-        	dSum += exp(0.1*adWeight[i]*adY[i]);
+        	dSum += exp(0.1 * adWeight[i] * (adY[i] - adOffset[i]));
             dTotalWeight += adWeight[i];
         }
 
 
     }
 
-	dInitF = (1.0 / 0.1)*log(dSum/dTotalWeight);
-
-	if (dInitF < Min) { 
-		dInitF = Min; 
-	}
-
-	if (dInitF > Max) 
-	{ 
-			dInitF = Max; 
-	}
+	dInitF = (1.0 / 0.1) * log(dSum / dTotalWeight);
 
     return GBM_OK;
 }
@@ -133,11 +112,11 @@ double CAsymmetric::Deviance
 	for(i=cIdxOff; i<cLength+cIdxOff; i++)
 	{
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-		dL += adWeight[i]*(adY[i]*exp(-dF) + dF);
+		dL += adWeight[i] * (exp(0.1 * (adY[i] - dF)) - 0.1 * (adY[i] - dF) - 1);
 		dW += adWeight[i];
 	}
 
-	return 2*dL/dW;
+	return dL/dW;
 }
 
 
@@ -164,8 +143,8 @@ GBMRESULT CAsymmetric::FitBestConstant
 	double dF = 0.0;
     unsigned long iObs = 0;
     unsigned long iNode = 0;
-	double MaxVal = 19.0;
-	double MinVal = -19.0;
+    unsigned long iVecd = 0;
+    double dL = 0.0;
 
     vecdNum.resize(cTermNodes);
     vecdNum.assign(vecdNum.size(),0.0);
@@ -177,46 +156,26 @@ GBMRESULT CAsymmetric::FitBestConstant
     vecdMin.resize(cTermNodes);
     vecdMin.assign(vecdMin.size(),HUGE_VAL);
 
-	for(iObs=0; iObs<nTrain; iObs++)
-	{
-		if(afInBag[iObs])
-		{
-			dF = adF[iObs] + ((adOffset==NULL) ? 0.0 : adOffset[iObs]);
-			vecdNum[aiNodeAssign[iObs]] += exp(0.1*adW[iObs]*log(adY[iObs])*exp(-dF));
-			vecdDen[aiNodeAssign[iObs]] += adW[iObs];
+    for(iNode=0; iNode<cTermNodes; iNode++)
+    {
+        if(vecpTermNodes[iNode]->cN >= cMinObsInNode)
+        {
+            iVecd = 0;
 
-			// Keep track of largest and smallest prediction in each node
-			vecdMax[aiNodeAssign[iObs]] = fmax2(dF,vecdMax[aiNodeAssign[iObs]]);
-			vecdMin[aiNodeAssign[iObs]] = fmin2(dF,vecdMin[aiNodeAssign[iObs]]);
-		}
-	}
+            for(iObs=0; iObs<nTrain; iObs++)
+            {
+                if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
+                {
+                    //dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
+                    dL += exp(0.1 * adY[iObs]);
+                    iVecd++;
+                }
+            }
 
-	for(iNode=0; iNode<cTermNodes; iNode++)
-	{
-		if(vecpTermNodes[iNode]!=NULL)
-		{
-			if(vecdNum[iNode] == 0.0)
-			{
-				// Taken from poisson.cpp
+            vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1) * log((1.0 / iVecd ) * dL);
 
-				// DEBUG: if vecdNum==0 then prediction = -Inf
-				// Not sure what else to do except plug in an arbitrary
-				//   negative number, -1? -10? Let's use -19, then make
-				//   sure |adF| < 19 always.
-				vecpTermNodes[iNode]->dPrediction = MinVal;
-			}
-
-			else if(vecdDen[iNode] == 0.0) { vecpTermNodes[iNode]->dPrediction = 0.0; }
-
-			else { vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1)*log(vecdNum[iNode]/vecdDen[iNode]); }
-
-			if (vecdMax[iNode]+vecpTermNodes[iNode]->dPrediction > MaxVal)
-				{ vecpTermNodes[iNode]->dPrediction = MaxVal - vecdMax[iNode]; }
-			if (vecdMin[iNode]+vecpTermNodes[iNode]->dPrediction < MinVal)
-				{ vecpTermNodes[iNode]->dPrediction = MinVal - vecdMin[iNode]; }
-
-		}
-	}
+        }
+    }
 
     return hr;
 }
@@ -244,8 +203,8 @@ double CAsymmetric::BagImprovement
 		if(!afInBag[i])
 		{
 			dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-			dReturnValue += adWeight[i]* (
-				(exp( 0.1 * (log(adY[i]- dF))) - 0.1 * log(adY[i] - dF) - 1) - (exp( 0.1 * log(adY[i]-dF-dStepSize*adFadj[i])) - 0.1 * log(adY[i] - dF-dStepSize*adFadj[i]) - 1));
+			dReturnValue += adWeight[i] * (
+				(exp(0.1 * (adY[i] - dF)) - 0.1 * (adY[i] - dF) - 1) - (exp(0.1 * (adY[i] - (dF + dStepSize * adFadj[i]))) - 0.1 * (adY[i] - (dF + dStepSize * adFadj[i])) - 1));
 			dW += adWeight[i];
 		}
 	}

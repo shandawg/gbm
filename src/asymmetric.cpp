@@ -71,24 +71,44 @@ GBMRESULT CAsymmetric::InitF
     {
         for(i=0; i<cLength; i++)
         {
-            dSum += adWeight[i]*adY[i];
+        	// including a: 0.1 here
+            //dSum += exp(0.1*adWeight[i]*log(adY[i]));
+
             dTotalWeight += adWeight[i];
         }
     }
-    else
+    else 
     {
         for(i=0; i<cLength; i++)
         {
-			dSum += adWeight[i]*adY[i]*exp(-adOffset[i]);
+        	// including a: 0.1 here
+            //dSum += exp(0.1*adWeight[i]*log(adY[i]));
+            if (log(adY[i]) > Max)
+            {
+            	adY[i] = exp(Max);
+            }
+            else if (adY[i] <= 0.0)
+			{
+				adY[i] = exp(Min);
+            }
+
+        	dSum += exp(0.1*adWeight[i]*log(adY[i]));
             dTotalWeight += adWeight[i];
         }
+
+
     }
 
-	if (dSum <= 0.0) { dInitF = Min; }
-	else { dInitF = log(dSum/dTotalWeight); }
+	dInitF = (1.0 / 0.1)*log(dSum/dTotalWeight);
 
-	if (dInitF < Min) { dInitF = Min; }
-	if (dInitF > Max) { dInitF = Max; }
+	if (dInitF < Min) { 
+		dInitF = Min; 
+	}
+
+	if (dInitF > Max) 
+	{ 
+			dInitF = Max; 
+	}
 
     return GBM_OK;
 }
@@ -162,7 +182,7 @@ GBMRESULT CAsymmetric::FitBestConstant
 		if(afInBag[iObs])
 		{
 			dF = adF[iObs] + ((adOffset==NULL) ? 0.0 : adOffset[iObs]);
-			vecdNum[aiNodeAssign[iObs]] += adW[iObs]*adY[iObs]*exp(-dF);
+			vecdNum[aiNodeAssign[iObs]] += exp(0.1*adW[iObs]*log(adY[iObs])*exp(-dF));
 			vecdDen[aiNodeAssign[iObs]] += adW[iObs];
 
 			// Keep track of largest and smallest prediction in each node
@@ -188,7 +208,7 @@ GBMRESULT CAsymmetric::FitBestConstant
 
 			else if(vecdDen[iNode] == 0.0) { vecpTermNodes[iNode]->dPrediction = 0.0; }
 
-			else { vecpTermNodes[iNode]->dPrediction = log(vecdNum[iNode]/vecdDen[iNode]); }
+			else { vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1)*log(vecdNum[iNode]/vecdDen[iNode]); }
 
 			if (vecdMax[iNode]+vecpTermNodes[iNode]->dPrediction > MaxVal)
 				{ vecpTermNodes[iNode]->dPrediction = MaxVal - vecdMax[iNode]; }

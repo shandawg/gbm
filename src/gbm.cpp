@@ -75,7 +75,7 @@ unsigned long gbm_setup
     }
     else if(strcmp(pszFamily,"linex") == 0)
     {
-        pDist = new CLinex();
+        pDist = new CLinex(adMisc[0]);
     }
     else if(strcmp(pszFamily,"tweedie") == 0)
     {

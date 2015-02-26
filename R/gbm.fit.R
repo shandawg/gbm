@@ -149,9 +149,17 @@ gbm.fit <- function(x,y,
       }
       Misc <- c(power=distribution$power)
    }
-   if((distribution$name == "linex") && any(y<0))
+   if(distribution$name == "linex")
    {
-       stop("Linex requires the response to be positive")
+      if(any(y >= 700)){
+        stop("Linex requires the response to be scaled")
+      }
+      if(is.null(distribution$alpha))
+      {
+         distribution$alpha = 0.00001
+      }
+      Misc <- c(alpha=distribution$alpha)
+
    }
    if((distribution$name == "poisson") && any(y != trunc(y)))
    {

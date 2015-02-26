@@ -10,6 +10,7 @@ class CLinex: public CDistribution
 public:
 
     CLinex();
+    CLinex(double dAlpha) : dAlpha(dAlpha) {};
 
     virtual ~CLinex();
 
@@ -75,6 +76,7 @@ private:
     vector<double> vecdDen;
 	vector<double> vecdMax;
     vector<double> vecdMin;
+    double dAlpha;
 };
 
 #endif // LINEX_H

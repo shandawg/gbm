@@ -43,7 +43,7 @@ GBMRESULT CLinex::ComputeWorkingResponse
 
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
 		// negative gradient (as stated in distribution.h)
-        adZ[i] = 0.1 * (exp(0.1 * (adY[i] - dF)) - 1.0);
+        adZ[i] = dAlpha * (exp(dAlpha * (adY[i] - dF)) - 1.0);
 	}
 
 Cleanup:
@@ -72,7 +72,7 @@ GBMRESULT CLinex::InitF
     {
         for(i=0; i<cLength; i++)
         {
-            dSum += adWeight[i] * exp(0.1 * adY[i]);
+            dSum += adWeight[i] * exp(dAlpha * adY[i]);
             dTotalWeight += adWeight[i];
         }
     }
@@ -80,12 +80,12 @@ GBMRESULT CLinex::InitF
     {
         for(i=0; i<cLength; i++)
         {
-        	dSum += adWeight[i] * exp(0.1 * (adY[i] - adOffset[i]));
+        	dSum += adWeight[i] * exp(dAlpha * (adY[i] - adOffset[i]));
             dTotalWeight += adWeight[i];
         }
     }
 
-	dInitF = (1.0 / 0.1) * log(dSum / dTotalWeight);
+	dInitF = (1.0 / dAlpha) * log(dSum / dTotalWeight);
 
     return GBM_OK;
 }
@@ -110,7 +110,7 @@ double CLinex::Deviance
 	for(i=cIdxOff; i<cLength+cIdxOff; i++)
 	{
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-		dL += adWeight[i] * (exp(0.1 * (adY[i] - dF)) - 0.1 * (adY[i] - dF) - 1);
+		dL += adWeight[i] * (exp(dAlpha * (adY[i] - dF)) - dAlpha * (adY[i] - dF) - 1);
 		dW += adWeight[i];
 	}
 
@@ -171,13 +171,13 @@ GBMRESULT CLinex::FitBestConstant
                 if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
                 {
                     dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
-                    dL += adW[iObs] * exp(0.1 * (adY[iObs] - dOffset -adF[iObs]));
+                    dL += adW[iObs] * exp(dAlpha * (adY[iObs] - dOffset -adF[iObs]));
                     dW += adW[iObs];
                     iVecd++;
                 }
             }
 
-            vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1) * log((1.0 / dW) * dL);
+            vecpTermNodes[iNode]->dPrediction = (1.0 / dAlpha) * log((1.0 / dW) * dL);
 
         }
     }
@@ -209,7 +209,7 @@ double CLinex::BagImprovement
 		{
 			dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
 			dReturnValue += adWeight[i] * (
-				(exp(0.1 * (adY[i] - dF)) - 0.1 * (adY[i] - dF) - 1) - (exp(0.1 * (adY[i] - (dF + dStepSize * adFadj[i]))) - 0.1 * (adY[i] - (dF + dStepSize * adFadj[i])) - 1));
+				(exp(dAlpha * (adY[i] - dF)) - dAlpha * (adY[i] - dF) - 1) - (exp(dAlpha * (adY[i] - (dF + dStepSize * adFadj[i]))) - dAlpha * (adY[i] - (dF + dStepSize * adFadj[i])) - 1));
 			dW += adWeight[i];
 		}
 	}

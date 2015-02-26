@@ -145,6 +145,7 @@ GBMRESULT CAsymmetric::FitBestConstant
     unsigned long iNode = 0;
     unsigned long iVecd = 0;
     double dL = 0.0;
+    double dOffset;
 
     vecdNum.resize(cTermNodes);
     vecdNum.assign(vecdNum.size(),0.0);
@@ -166,8 +167,8 @@ GBMRESULT CAsymmetric::FitBestConstant
             {
                 if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
                 {
-                    //dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
-                    dL += exp(0.1 * adY[iObs]);
+                    dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
+                    dL += exp(0.1 * (adY[iObs] - dOffset -adF[iObs]));
                     iVecd++;
                 }
             }

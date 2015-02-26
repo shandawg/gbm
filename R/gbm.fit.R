@@ -158,6 +158,9 @@ gbm.fit <- function(x,y,
       {
          distribution$alpha = 0.00001
       }
+      if(distributuion$alpha == 0){
+         stop("Linex alpha cannot be 0")
+      }
       Misc <- c(alpha=distribution$alpha)
 
    }

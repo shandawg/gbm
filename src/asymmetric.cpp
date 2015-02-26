@@ -40,6 +40,7 @@ GBMRESULT CAsymmetric::ComputeWorkingResponse
 
 	for(i=0; i<nTrain; i++)
 	{
+
 		dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
 		// negative gradient (as stated in distribution.h)
         adZ[i] = 0.1 * (exp(0.1 * (adY[i] - dF)) - 1.0);
@@ -71,8 +72,7 @@ GBMRESULT CAsymmetric::InitF
     {
         for(i=0; i<cLength; i++)
         {
-        	// including a: 0.1 here
-            dSum += exp(0.1 * adWeight[i] * adY[i]);
+            dSum += adWeight[i] * exp(0.1 * adY[i]);
             dTotalWeight += adWeight[i];
         }
     }
@@ -80,11 +80,9 @@ GBMRESULT CAsymmetric::InitF
     {
         for(i=0; i<cLength; i++)
         {
-        	dSum += exp(0.1 * adWeight[i] * (adY[i] - adOffset[i]));
+        	dSum += adWeight[i] * exp(0.1 * (adY[i] - adOffset[i]));
             dTotalWeight += adWeight[i];
         }
-
-
     }
 
 	dInitF = (1.0 / 0.1) * log(dSum / dTotalWeight);
@@ -144,7 +142,8 @@ GBMRESULT CAsymmetric::FitBestConstant
     unsigned long iObs = 0;
     unsigned long iNode = 0;
     unsigned long iVecd = 0;
-    double dL = 0.0;
+    double dL;
+    double dW;
     double dOffset;
 
     vecdNum.resize(cTermNodes);
@@ -157,23 +156,28 @@ GBMRESULT CAsymmetric::FitBestConstant
     vecdMin.resize(cTermNodes);
     vecdMin.assign(vecdMin.size(),HUGE_VAL);
 
+    std::vector<double> adW2(nTrain);
+
     for(iNode=0; iNode<cTermNodes; iNode++)
     {
         if(vecpTermNodes[iNode]->cN >= cMinObsInNode)
         {
             iVecd = 0;
+            dL = 0.0;
+            dW = 0.0;
 
             for(iObs=0; iObs<nTrain; iObs++)
             {
                 if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
                 {
                     dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
-                    dL += exp(0.1 * (adY[iObs] - dOffset -adF[iObs]));
+                    dL += adW[iObs] * exp(0.1 * (adY[iObs] - dOffset -adF[iObs]));
+                    dW += adW[iObs];
                     iVecd++;
                 }
             }
 
-            vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1) * log((1.0 / iVecd ) * dL);
+            vecpTermNodes[iNode]->dPrediction = (1.0 / 0.1) * log((1.0 / dW) * dL);
 
         }
     }

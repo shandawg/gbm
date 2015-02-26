@@ -78,7 +78,7 @@ gbm.perf <- function(object,
                         qu="Quantile loss",
                         mu="Multinomial deviance",
                         td="t-distribution deviance",
-                        as="Gamma deviance"
+                        li="Linex deviance"
                         )
          }
       }

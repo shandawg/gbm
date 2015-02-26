@@ -1,21 +1,21 @@
-// Asymmetric loss function (LINEX): exp(a * (y - yhat)) - a * (y - yhat) - 1
+// Linex loss function (LINEX): exp(a * (y - yhat)) - a * (y - yhat) - 1
 // Gradient: -a * sum(exp(a * (y - yhat)) - 1)
 // bestConstant: (1 / a) * log((1 / N) * sum(exp(a * y)))
 
-#include "asymmetric.h"
+#include "linex.h"
 #include <math.h>
 #include <iostream>
 
-CAsymmetric::CAsymmetric()
+CLinex::CLinex()
 {
 }
 
-CAsymmetric::~CAsymmetric()
+CLinex::~CLinex()
 {
 }
 
 
-GBMRESULT CAsymmetric::ComputeWorkingResponse
+GBMRESULT CLinex::ComputeWorkingResponse
 (
     double *adY,
     double *adMisc,
@@ -54,7 +54,7 @@ Error:
 
 
 
-GBMRESULT CAsymmetric::InitF
+GBMRESULT CLinex::InitF
 (
     double *adY,
     double *adMisc,
@@ -91,7 +91,7 @@ GBMRESULT CAsymmetric::InitF
 }
 
 
-double CAsymmetric::Deviance
+double CLinex::Deviance
 (
     double *adY,
     double *adMisc,
@@ -118,7 +118,7 @@ double CAsymmetric::Deviance
 }
 
 
-GBMRESULT CAsymmetric::FitBestConstant
+GBMRESULT CLinex::FitBestConstant
 (
     double *adY,
     double *adMisc,
@@ -185,7 +185,7 @@ GBMRESULT CAsymmetric::FitBestConstant
     return hr;
 }
 
-double CAsymmetric::BagImprovement
+double CLinex::BagImprovement
 (
 	double *adY,
 	double *adMisc,

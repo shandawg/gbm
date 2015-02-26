@@ -73,9 +73,9 @@ unsigned long gbm_setup
     {
         pDist = new CGamma();
     }
-    else if(strcmp(pszFamily,"asymmetric") == 0)
+    else if(strcmp(pszFamily,"linex") == 0)
     {
-        pDist = new CAsymmetric();
+        pDist = new CLinex();
     }
     else if(strcmp(pszFamily,"tweedie") == 0)
     {

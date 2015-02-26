@@ -33,7 +33,7 @@
 #include "huberized.h"
 #include "gamma.h"
 #include "tweedie.h"
-#include "asymmetric.h"
+#include "linex.h"
 
 typedef vector<char> VEC_CATEGORIES;
 typedef vector<VEC_CATEGORIES> VEC_VEC_CATEGORIES;

@@ -1,17 +1,17 @@
-#ifndef ASYMMETRIC_H
-#define ASYMMETRIC_H
+#ifndef LINEX_H
+#define LINEX_H
 
 #include <Rmath.h>
 #include "distribution.h"
 
-class CAsymmetric: public CDistribution
+class CLinex: public CDistribution
 {
 
 public:
 
-    CAsymmetric();
+    CLinex();
 
-    virtual ~CAsymmetric();
+    virtual ~CLinex();
 
 	GBMRESULT UpdateParams(double *adF,
 	                       double *adOffset,
@@ -77,7 +77,7 @@ private:
     vector<double> vecdMin;
 };
 
-#endif // ASYMMETRIC_H
+#endif // LINEX_H
 
 
 

@@ -64,7 +64,7 @@ calibrate.plot <- function(y,p,
       {
          se.lower[se.lower < 0] <- 0
       }
-      if(distribution=="asymmetric")
+      if(distribution=="linex")
       {
           se.lower[se.lower < 0] <- 0
       }
